@@ -226,6 +226,8 @@ task edge_detection()
 {
 	while(1)
 	{
+		displayCenteredTextLine(6, "Colour value: %d%", SensorValue[Colour]);
+
 		if (SensorValue[Colour] < white_colour/1.5)
 		{
 			aquire_state_lock();

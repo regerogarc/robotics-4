@@ -21,7 +21,7 @@ void drive(int speed)
 	setMotorSpeed(LeftMotor, speed);
 	setMotorSpeed(RightMotor, speed);
 
-	display_motor_states(speed, speed);
+	//display_motor_states(speed, speed);
 }
 
 void turn(int speed)
@@ -31,7 +31,7 @@ void turn(int speed)
 	setMotorSpeed(LeftMotor, speed);
 	setMotorSpeed(RightMotor, -speed);
 
-	display_motor_states(speed, -speed);
+	//display_motor_states(speed, -speed);
 }
 
 void stopRobot(void)
@@ -82,7 +82,7 @@ void searching()
 	while(1)
 	{
 		if (interrupt) return;
-		
+
 		distance = getUSDistance(US);
 		if (distance < SIGHT_THRESHOLD)
 		{

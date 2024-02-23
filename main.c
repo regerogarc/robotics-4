@@ -213,7 +213,7 @@ task check_flip()
 				ground_detected = false;
 			}
 
-			int flip_elapsed = flip_timer - nPgmTime;
+			int flip_elapsed = nPgmTime - flip_timer;
 			if (!ground_detected && (flip_elapsed > FLIP_THRESHOLD))
 			{
 				aquire_state_lock();

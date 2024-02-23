@@ -150,7 +150,8 @@ void unflip()
 	displayCenteredTextLine(2, "Unflip");
 }
 
-void (*state_function)[4](void) = {&searching, &moving, &edge_evasion, &unflip};
+// robot c does not understand function pointers
+//void(* state_function ) [4] (void) = {&searching, &moving, &edge_evasion, &unflip};
 
 // void refine_angle()
 // {
@@ -229,7 +230,23 @@ task main()
 
 	while(1)
 	{
-		state_function[current_state]();
+		//state_function[current_state]();
+		// run the correct function for the current state
+		switch (current_state)
+		{
+			case SEARCHING:
+				searching();
+				break;
+			case MOVING:
+				moving();
+				break;
+			case EDGE_EVASION:
+				edge_evasion();
+				break;
+			case UNFLIP:
+				unflip();
+				break;
+		}
 
 		// Reset the interrupt flag
 		interrupt = 0;

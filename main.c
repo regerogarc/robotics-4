@@ -88,7 +88,7 @@ void searching()
 		distance = SensorValue[US];
 		if (distance < SIGHT_THRESHOLD)
 		{
-			displayCenteredBigTextLine(4, "Target Aquired");
+			displayCenteredTextLine(4, "Target Aquired");
 			stopRobot();
 			aquire_state_lock();
 			current_state = MOVING;
@@ -96,7 +96,7 @@ void searching()
 			return;
 		}
 		else {
-			displayCenteredBigTextLine(4, "Searching");
+			displayCenteredTextLine(4, "Searching");
 		}
 	}
 }
@@ -129,25 +129,41 @@ void moving()
 void edge_evasion()
 {
 	displayCenteredTextLine(2, "Evading Edge");
-	int pre_turn_colour, post_turn_colour;
+	int target_angle;
 
-	while(1)
-	{
-		pre_turn_colour = SensorValue[Colour]; // Measure the colour that the colour sensor is detecting before turning
-		if (pre_turn_colour < white_colour/1.5) { // If the colour sensor detects something 1.5x darker than the default
-			// Turn in the Flag Direction
-			post_turn_colour = SensorValue[Colour]; // Measure the colour after turning
-		}
-		if (post_turn_colour < pre_turn_colour) { // If ground is darker after turning
-			// Flip the flag
-			// For loop to turn a certain amount
-		}
-	}
+	drive(-100);
+	delay(3000);
+	stopRobot();
+
+	//target_angle = getGyroDegrees();
+
+	aquire_state_lock();
+	current_state = SEARCHING;
+	release_state_lock();
+	return;
+
+//	while(1)
+//	{
+//		pre_turn_colour = SensorValue[Colour]; // Measure the colour that the colour sensor is detecting before turning
+//		if (pre_turn_colour < white_colour/1.5) { // If the colour sensor detects something 1.5x darker than the default
+//			// Turn in the Flag Direction
+//			post_turn_colour = SensorValue[Colour]; // Measure the colour after turning
+//		}
+//		if (post_turn_colour < pre_turn_colour) { // If ground is darker after turning
+//			// Flip the flag
+//			// For loop to turn a certain amount
+//		}
+//	}
 }
 
 void unflip()
 {
 	displayCenteredTextLine(2, "Unflip");
+	delay(3000);
+	aquire_state_lock();
+	current_state = SEARCHING;
+	release_state_lock();
+	return;
 }
 
 // robot c does not understand function pointers

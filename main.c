@@ -179,7 +179,7 @@ task check_flip()
 	{
 		if (current_state == MOVING || current_state == SEARCHING)
 		{
-			int sensor_val = getBumperValue(touchSensor);
+			int sensor_val = getTouchValue(touchSensor);
 
 			if (sensor_val)
 			{

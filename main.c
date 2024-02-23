@@ -54,12 +54,15 @@ void stopRobot(void)
 int state_lock = 0;
 
 void aquire_state_lock() {
+	displayCenteredTextLine(8, "Aquire lcok");
 	while(state_lock){}
 	state_lock = 1;
+	displayCenteredTextLine(8, "Lock aquired");
 }
 
 void release_state_lock()
 {
+	displayCenteredTextLine(8, "Lock released");
 	state_lock = 0;
 }
 
@@ -226,9 +229,10 @@ task edge_detection()
 {
 	while(1)
 	{
-		displayCenteredTextLine(6, "Colour value: %d%", SensorValue[Colour]);
+		displayCenteredTextLine(6, "Colour value: %d", SensorValue[Colour]);
+		displayCenteredTextLine(7, "Colour thresh: %d", white_colour/3);
 
-		if (SensorValue[Colour] < white_colour/1.5)
+		if (SensorValue[Colour] < white_colour/3)
 		{
 			aquire_state_lock();
 			current_state = EDGE_EVASION;

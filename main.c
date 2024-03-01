@@ -22,15 +22,15 @@ void display_motor_states(int left_speed, int right_speed)
 	displayCenteredTextLine(5, "Right motor: %d%%", right_speed);
 }
 
-void drive(int speed)
-{
+//void drive(int speed)
+//{
 	// move both motors in the same direction
   // speed is an int between 0-100%, negative for reverse
-	setMotorSpeed(LeftMotor, speed);
-	setMotorSpeed(RightMotor, speed);
+//	setMotorSpeed(LeftMotor, speed);
+//	setMotorSpeed(RightMotor, speed);
 
-	display_motor_states(speed, speed);
-}
+//	display_motor_states(speed, speed);
+//}
 
 void turn(int speed)
 {
@@ -83,7 +83,7 @@ States current_state = SEARCHING;
 void searching()
 {
 	displayCenteredTextLine(2, "Searching");
-	turn(100);
+	//turn(100);
 	while(1)
 	{
 		if (interrupt) return;
@@ -139,7 +139,7 @@ void attack()
 void moving()
 {
 	displayCenteredTextLine(2, "Moving");
-	drive(100);
+	drive_speed = 100;
 	while(1)
 	{
 		if (interrupt) return;
@@ -190,9 +190,25 @@ void edge_evasion()
 // TASKS --------------------------------------------------------------------------------------------------------------------------------------------------------
 
 int drive_speed = 0;
+int drive_type = 1;
 
 task drive()
 {
+	while(1)
+	{
+		resetMotorEncoder(LeftMotor);
+		resetMotorEncoder(RightMotor);
+		setMotorTarget(LeftMotor, 360, drive_speed);
+		setMotorTarget(RightMotor, 360*drive_type, drive_speed);
+		while(1)
+		{
+			// wait for both motors to make one full rotation
+			if (getMotorEncoder(LeftMotor) == 360 && getMotorEncoder(RightMotor) == 360*drive_type)
+			{
+				break;
+			}
+		}
+	}
 
 }
 
@@ -230,8 +246,17 @@ task main()
 	resetMotorEncoder(FlipMotor);
 
 	startTask(edge_detection);
+	startTask(drive);
 
-	while(1)
+	drive_speed = 100;
+	delay(5000);
+	drive_speed = -100;
+	delay(5000);
+	drive_type = -1;
+	delay(5000);
+	drive_speed = 100;
+
+	while(0)
 	{
 		//state_function[current_state]();
 		// run the correct function for the current state

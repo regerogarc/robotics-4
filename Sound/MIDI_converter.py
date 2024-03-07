@@ -10,6 +10,7 @@
 #         print(msg)
 
 import mido
+import sys
 from mido import MidiFile
 
 note_frequencies = {
@@ -160,9 +161,10 @@ def create_c_file(note_info):
     
     for note in note_info:
         if note[0] == -1:
-            f.write("\tdelay({} * ms_conversion);\n".format(note[1]))
+            f.write("\tdelay({} * timing_multiplier);\n".format(note[1]))
         else:
             f.write("\tplayTone({},{} * timing_multiplier);\n".format(note[0], note[1]))
+        f.write("\twhile(bSoundActive){\n\t\tsleep(1);\n\t}\n")
     
     f.write("}")
     f.close()
@@ -174,10 +176,8 @@ def print_MIDI_data(mid):
 
 def main():
     # Load MIDI file
-    mid = MidiFile('./MIDI/test2.mid')
+    mid = MidiFile('./MIDI/{}'.format(sys.argv[1]))
     track = mid.tracks[-1]
-
-    # print_MIDI_data(mid)
 
     timing_data = []
     current_time = 0
@@ -208,10 +208,6 @@ def main():
                 timing_data.append((-1, next_msg.time))
     
     # print(timing_data)
-
-
-        
-
         
 
 

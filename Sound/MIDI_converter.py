@@ -159,26 +159,71 @@ def create_c_file(note_info):
     f.write("\tint timing_multiplier = 1;\n")
     
     for note in note_info:
-        f.write("\tplayTone({},{} * timing_multiplier);\n".format(note[0], note[1]))
+        if note[0] == -1:
+            f.write("\tdelay({} * ms_conversion);\n".format(note[1]))
+        else:
+            f.write("\tplayTone({},{} * timing_multiplier);\n".format(note[0], note[1]))
     
     f.write("}")
     f.close()
 
-def print_MIDI_data()
+def print_MIDI_data(mid):
+    for track in mid.tracks:
+        for msg in track:
+            print(msg)
 
 def main():
     # Load MIDI file
     mid = MidiFile('./MIDI/test2.mid')
+    track = mid.tracks[-1]
 
-    # Select the track you want to analyze
-    track_number = 1  # Change this to the desired track number
-    track = mid.tracks[track_number]
+    # print_MIDI_data(mid)
 
-    # Get note information
-    note_info = get_note_info(track)
-    # print(note_info)
+    timing_data = []
+    current_time = 0
 
-    create_c_file(note_info)
+    # Get the timing data of the notes and pauses
+    for i, msg in enumerate(track):
+        # Time of note will be the ticks between now and the next message
+        # Only use note_on messages
+        if msg.type == 'note_on': 
+            delta_time = 0
+            next_msg = track[i+1] 
+            while True:
+                # Find out what is next
+                if next_msg.type == 'note_on':
+                    delta_time += next_msg.time
+                    break
+                elif next_msg.type == 'note_off' and next_msg.note == msg.note:
+                    delta_time += next_msg.time
+                    break
+                else:
+                    delta_time += next_msg.time
+                next_msg = track[i+2]
+            timing_data.append((note_frequencies[msg.note], delta_time))
+        elif msg.type == 'note_off':
+            next_msg = track[i+1] 
+            prev_msg = track[i-1]
+            if (msg.note == prev_msg.note and prev_msg.type == 'note_on') or prev_msg.type == 'note_off':
+                timing_data.append((-1, next_msg.time))
+    
+    # print(timing_data)
+
+
+        
+
+        
+
+
+    # # Select the track you want to analyze
+    # track_number = 1  # Change this to the desired track number
+    # track = mid.tracks[track_number]
+
+    # # Get note information
+    # note_info = get_note_info(track)
+    # # print(note_info)
+
+    create_c_file(timing_data)
 
 if __name__ == "__main__":
     main()

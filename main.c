@@ -12,6 +12,8 @@
 
 int white_colour;
 
+int drive_speed = 0;
+int drive_type = 1;
 int distance = 0;
 
 // Driver functions ---------------------------------------------------------------------------------------------------------------------------
@@ -174,7 +176,7 @@ void edge_evasion()
 {
 	displayCenteredTextLine(2, "Evading Edge");
 
-	drive(-100);
+	//drive(-100);
 	delay(3000);
 	stopRobot();
 
@@ -189,8 +191,6 @@ void edge_evasion()
 
 // TASKS --------------------------------------------------------------------------------------------------------------------------------------------------------
 
-int drive_speed = 0;
-int drive_type = 1;
 
 task drive()
 {
@@ -198,16 +198,10 @@ task drive()
 	{
 		resetMotorEncoder(LeftMotor);
 		resetMotorEncoder(RightMotor);
-		setMotorTarget(LeftMotor, 360, drive_speed);
-		setMotorTarget(RightMotor, 360*drive_type, drive_speed);
-		while(1)
-		{
-			// wait for both motors to make one full rotation
-			if (getMotorEncoder(LeftMotor) == 360 && getMotorEncoder(RightMotor) == 360*drive_type)
-			{
-				break;
-			}
-		}
+		delay(200);
+		setMotorTarget(LeftMotor, 362, drive_speed);
+		setMotorTarget(RightMotor, 360, drive_speed);
+		delay(1000);
 	}
 
 }
@@ -245,16 +239,16 @@ task main()
 	// Calibrate the flipper motor
 	resetMotorEncoder(FlipMotor);
 
-	startTask(edge_detection);
+	//startTask(edge_detection);
+	drive_speed = 100;
 	startTask(drive);
-
-	drive_speed = 100;
-	delay(5000);
-	drive_speed = -100;
-	delay(5000);
-	drive_type = -1;
-	delay(5000);
-	drive_speed = 100;
+	while(1)
+	{
+		//setMotorSync(LeftMotor, RightMotor, 0, 100);
+		//delay(8000);
+		//setMotorSync(LeftMotor, RightMotor, -1, 100);
+		//delay(8000);
+	}
 
 	while(0)
 	{

@@ -202,8 +202,8 @@ task drive_task()
 	{
 		if (!stopped)
 		{
-			moveMotorTarget(LeftMotor, 720, drive_speed);
-			moveMotorTarget(RightMotor, 720, drive_speed);
+			moveMotorTarget(LeftMotor, 720, 100);
+			moveMotorTarget(RightMotor, 720, 100);
 			waitUntilMotorStop(LeftMotor);
 			waitUntilMotorStop(RightMotor);
 		}

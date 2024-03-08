@@ -12,8 +12,10 @@
 
 int white_colour;
 
-int drive_speed = 0;
-int drive_type = 1;
+int drive_speed = 100;
+int left_motor_dir = 1;
+int right_motor_dir = 1;
+int stopped = 1;
 int distance = 0;
 
 // Driver functions ---------------------------------------------------------------------------------------------------------------------------
@@ -24,31 +26,33 @@ void display_motor_states(int left_speed, int right_speed)
 	displayCenteredTextLine(5, "Right motor: %d%%", right_speed);
 }
 
-//void drive(int speed)
-//{
-	// move both motors in the same direction
-  // speed is an int between 0-100%, negative for reverse
-//	setMotorSpeed(LeftMotor, speed);
-//	setMotorSpeed(RightMotor, speed);
+void forwards()
+{
+	stopped = 0;
+	left_motor_dir = 1;
+	right_motor_dir = 1;
+}
 
-//	display_motor_states(speed, speed);
-//}
+void backwards()
+{
+	stopped = 0;
+	left_motor_dir = -1;
+	right_motor_dir = -1;
+}
 
-void turn(int speed)
+void turn()
 {
 	// move both motors in the opposite direction to rotate the robot
   // speed is an int between 0-100%, positive for clockwise, negative for anti-clockwise
-	setMotorSpeed(LeftMotor, speed);
-	setMotorSpeed(RightMotor, -speed);
-
-	display_motor_states(speed, -speed);
+	stopped = 0;
+	left_motor_dir = -1;
+	right_motor_dir = 1;
 }
 
 void stopRobot(void)
 {
 	// stop the robot's motors from moving
-	setMotorSpeed(LeftMotor, 0);
-	setMotorSpeed(RightMotor, 0);
+	stopped = 1;
 }
 
 // MUTEX LOCK ------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -85,7 +89,7 @@ States current_state = SEARCHING;
 void searching()
 {
 	displayCenteredTextLine(2, "Searching");
-	//turn(100);
+	turn();
 	while(1)
 	{
 		if (interrupt) return;
@@ -141,7 +145,7 @@ void attack()
 void moving()
 {
 	displayCenteredTextLine(2, "Moving");
-	drive_speed = 100;
+	forwards();
 	while(1)
 	{
 		if (interrupt) return;
@@ -176,8 +180,8 @@ void edge_evasion()
 {
 	displayCenteredTextLine(2, "Evading Edge");
 
-	//drive(-100);
-	delay(3000);
+	backwards();
+	sleep(3000);
 	stopRobot();
 
 	//target_angle = getGyroDegrees();
@@ -196,12 +200,15 @@ task drive()
 {
 	while(1)
 	{
-		resetMotorEncoder(LeftMotor);
-		resetMotorEncoder(RightMotor);
-		delay(200);
-		setMotorTarget(LeftMotor, 362, drive_speed);
-		setMotorTarget(RightMotor, 360, drive_speed);
-		delay(1000);
+		if (!stopped)
+		{
+			resetMotorEncoder(LeftMotor);
+			resetMotorEncoder(RightMotor);
+			sleep(1000);
+			setMotorTarget(LeftMotor, 360 * left_motor_dir, drive_speed);
+			setMotorTarget(RightMotor, 360 * right_motor_dir, drive_speed);
+			sleep(1000);
+		}
 	}
 
 }
@@ -226,33 +233,24 @@ task edge_detection()
 task main()
 {
 	// Calibrate the colour sensor
-	delay(500);
+	sleep(500);
 
 	int colour_average = 0;
 	for (int i = 0; i < 20; i++)
 	{
 		colour_average += SensorValue[Colour];
-		delay(25);
+		sleep(25);
 	}
 	white_colour = colour_average/20;
 
 	// Calibrate the flipper motor
 	resetMotorEncoder(FlipMotor);
 
-	//startTask(edge_detection);
-	drive_speed = 100;
+	startTask(edge_detection);
 	startTask(drive);
+
 	while(1)
 	{
-		//setMotorSync(LeftMotor, RightMotor, 0, 100);
-		//delay(8000);
-		//setMotorSync(LeftMotor, RightMotor, -1, 100);
-		//delay(8000);
-	}
-
-	while(0)
-	{
-		//state_function[current_state]();
 		// run the correct function for the current state
 		switch (current_state)
 		{

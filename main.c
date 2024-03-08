@@ -12,7 +12,7 @@
 
 int white_colour;
 
-int stopped = 0;
+int stopped = 1;
 int distance = 0;
 
 // Driver functions ---------------------------------------------------------------------------------------------------------------------------
@@ -109,7 +109,8 @@ void searching()
 void attack()
 {
 	displayCenteredTextLine(2, "Attacking");
-	setMotorTarget(FlipMotor, 3600, 100);
+	
+	startTask(flipper);
 
 	while(1)
 	{
@@ -120,20 +121,13 @@ void attack()
 		{
 			displayCenteredTextLine(4, "Target Out of Range");
 
-			// Reset the flipper and change back to searching state
-			setMotorTarget(FlipMotor, 0, 100);
+			// Stop the flipper and change back to searching state
+			stopTask(flipper);
+
 			aquire_state_lock();
 			current_state = SEARCHING;
 			release_state_lock();
 			return;
-		}
-		else if (getMotorEncoder(FlipMotor) == 3600)
-		{
-			setMotorTarget(FlipMotor, 0, 100);
-		}
-		else if (getMotorEncoder(FlipMotor) == 0)
-		{
-			setMotorTarget(FlipMotor, 3600, -100);
 		}
 	}
 }
@@ -176,8 +170,8 @@ void edge_evasion()
 {
 	displayCenteredTextLine(2, "Evading Edge");
 
-	//drive(-100);
-	delay(3000);
+	backwards();
+	sleep(3000);
 	stopRobot();
 
 	//target_angle = getGyroDegrees();
@@ -191,12 +185,19 @@ void edge_evasion()
 
 // TASKS --------------------------------------------------------------------------------------------------------------------------------------------------------
 
+task flipper()
+{
+	while(1)
+	{
+		setMotorSpeed(FlipMotor, 100);
+		sleep(2000);
+		setMotorSpeed(FlipMotor, -100);
+		sleep(2000);
+	}
+}
 
 task drive_task()
 {
-	
-	resetMotorEncoder(LeftMotor);
-	resetMotorEncoder(RightMotor);
 	while(1)
 	{
 		if (!stopped)
@@ -230,31 +231,25 @@ task edge_detection()
 task main()
 {
 	// Calibrate the colour sensor
-	delay(500);
+	sleep(500);
 
 	int colour_average = 0;
 	for (int i = 0; i < 20; i++)
 	{
 		colour_average += SensorValue[Colour];
-		delay(25);
+		sleep(25);
 	}
 	white_colour = colour_average/20;
 
-	// Calibrate the flipper motor
+	// Zero the motor encoders
 	resetMotorEncoder(FlipMotor);
+	resetMotorEncoder(LeftMotor);
+	resetMotorEncoder(RightMotor);
 
-	//startTask(edge_detection);
-	drive_speed = 100;
-	startTask(drive);
+	startTask(drive_task);
+	startTask(edge_detection);
+
 	while(1)
-	{
-		//setMotorSync(LeftMotor, RightMotor, 0, 100);
-		//delay(8000);
-		//setMotorSync(LeftMotor, RightMotor, -1, 100);
-		//delay(8000);
-	}
-
-	while(0)
 	{
 		//state_function[current_state]();
 		// run the correct function for the current state

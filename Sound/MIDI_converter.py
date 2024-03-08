@@ -155,7 +155,7 @@ def get_note_info(track):
     return note_info
 
 def create_c_file(note_info):
-    f = open("Music.c", "w")
+    f = open("MusicLong.c", "w")
     f.write("task play_sound()\n{\n")
     f.write("\tint timing_multiplier = 1;\n")
     
@@ -164,9 +164,41 @@ def create_c_file(note_info):
             f.write("\tdelay({} * timing_multiplier);\n".format(note[1]))
         else:
             f.write("\tplayTone({},{} * timing_multiplier);\n".format(note[0], note[1]))
-        f.write("\twhile(bSoundActive){\n\t\tsleep(1);\n\t}\n")
+            f.write("\twhile(bSoundActive){\n\t\tsleep(1);\n\t}\n")
     
     f.write("}")
+    f.close()
+
+    f = open("MusicShort.c", 'w')
+    f.write("float notes[{}][2] = {{".format(len(note_info)))
+
+    for i in range(len(note_info)):
+        f.write("{{{},{}}}".format(note_info[i][0], note_info[i][1]))
+        if (i < len(note_info) - 1):
+            f.write(",")
+    
+    f.write("};\n\n")
+
+    f.write("""task playMusic()
+{{
+    int timing_multiplier = 1;
+    
+    for (int i = 0; i < {}; i++)
+    {{
+        if (notes[i][0] == -1)
+        {{
+            delay(notes[i][1] * timing_multiplier);
+        }} else
+        {{
+            playTone(notes[i][0], notes[i][1] * timing_multiplier);
+            while(bSoundActive)
+            {{
+                sleep(1);
+            }}
+        }}
+    }}
+}}""".format(len(note_info)))
+    
     f.close()
 
 def print_MIDI_data(mid):
@@ -178,7 +210,7 @@ def main():
     # Load MIDI file
     mid = MidiFile('./MIDI/{}'.format(sys.argv[1]))
     track = mid.tracks[-1]
-
+    # print(track)
     timing_data = []
     current_time = 0
 
@@ -205,7 +237,8 @@ def main():
             next_msg = track[i+1] 
             prev_msg = track[i-1]
             if (msg.note == prev_msg.note and prev_msg.type == 'note_on') or prev_msg.type == 'note_off':
-                timing_data.append((-1, next_msg.time))
+                if (next_msg.time > 0):
+                    timing_data.append((-1, next_msg.time))
     
     # print(timing_data)
         

@@ -22,18 +22,20 @@ void display_motor_states(int left_speed, int right_speed)
 	displayCenteredTextLine(4, "Left motor: %d%%", left_speed);
 	displayCenteredTextLine(5, "Right motor: %d%%", right_speed);
 }
-
+int turn_flag = 0;
 void turn()
 {
 	// move both motors in the opposite direction to rotate the robot
 	stopped = 0;
-	setMotorReversed(LeftMotor, 1);
+	turn_flag = 0;
+	setMotorReversed(LeftMotor, 0);
 	setMotorReversed(RightMotor, 0);
 }
 
 void forwards()
 {
 	stopped = 0;
+	turn_flag = 1;
 	setMotorReversed(LeftMotor, 0);
 	setMotorReversed(RightMotor, 0);
 }
@@ -41,6 +43,7 @@ void forwards()
 void backwards()
 {
 	stopped = 0;
+	turn_flag = 1;
 	setMotorReversed(LeftMotor, 1);
 	setMotorReversed(RightMotor, 1);
 }
@@ -56,15 +59,15 @@ void stopRobot(void)
 int state_lock = 0;
 
 void aquire_state_lock() {
-	displayCenteredTextLine(8, "Aquire lcok");
+	//displayCenteredTextLine(8, "Aquire lcok");
 	while(state_lock){}
 	state_lock = 1;
-	displayCenteredTextLine(8, "Lock aquired");
+	//displayCenteredTextLine(8, "Lock aquired");
 }
 
 void release_state_lock()
 {
-	displayCenteredTextLine(8, "Lock released");
+	//displayCenteredTextLine(8, "Lock released");
 	state_lock = 0;
 }
 
@@ -93,7 +96,7 @@ void searching()
 		distance = SensorValue[US];
 		if (distance < SIGHT_THRESHOLD)
 		{
-			displayCenteredTextLine(4, "Target Aquired");
+			//displayCenteredTextLine(4, "Target Aquired");
 			stopRobot();
 			aquire_state_lock();
 			current_state = MOVING;
@@ -101,16 +104,31 @@ void searching()
 			return;
 		}
 		else {
-			displayCenteredTextLine(4, "Searching");
+			//displayCenteredTextLine(4, "Searching");
 		}
 	}
 }
 
+task flipper()
+{
+	while(1)
+	{
+		setMotorSpeed(FlipMotor, -100);
+		sleep(3000);
+		setMotorSpeed(FlipMotor, 100);
+		sleep(3000);
+	}
+}
+
+
 void attack()
 {
-	displayCenteredTextLine(2, "Attacking");
-	
+	//displayCenteredTextLine(2, "Attacking");
+
+	stopRobot();
+
 	startTask(flipper);
+	//setMotorSpeed(FlipMotor, -100);
 
 	while(1)
 	{
@@ -119,10 +137,12 @@ void attack()
 		distance = SensorValue[US];
 		if (distance > FLIP_THRESHOLD)
 		{
-			displayCenteredTextLine(4, "Target Out of Range");
+			//displayCenteredTextLine(4, "Target Out of Range");
 
 			// Stop the flipper and change back to searching state
 			stopTask(flipper);
+			setMotorTarget(FlipMotor, 0, 100);
+			waitUntilMotorStop(FlipMotor);
 
 			aquire_state_lock();
 			current_state = SEARCHING;
@@ -134,7 +154,7 @@ void attack()
 
 void moving()
 {
-	displayCenteredTextLine(2, "Moving");
+	//displayCenteredTextLine(2, "Moving");
 	forwards();
 	while(1)
 	{
@@ -143,7 +163,7 @@ void moving()
 		distance = SensorValue[US];
 		if (distance > SIGHT_THRESHOLD)
 		{
-			displayCenteredTextLine(4, "Target Lost");
+			//displayCenteredTextLine(4, "Target Lost");
 			stopRobot();
 			aquire_state_lock();
 			current_state = SEARCHING;
@@ -152,7 +172,7 @@ void moving()
 		}
 		else if (distance < FLIP_THRESHOLD)
 		{
-			displayCenteredTextLine(4, "Target In Range, Attacking");
+			//displayCenteredTextLine(4, "Target In Range, Attacking");
 			stopRobot();
 			aquire_state_lock();
 			current_state = ATTACK;
@@ -161,7 +181,7 @@ void moving()
 		}
 		else
 		{
-			displayCenteredBigTextLine(4, "Approaching Target");
+			//displayCenteredBigTextLine(4, "Approaching Target");
 		}
 	}
 }
@@ -185,30 +205,45 @@ void edge_evasion()
 
 // TASKS --------------------------------------------------------------------------------------------------------------------------------------------------------
 
-task flipper()
-{
-	while(1)
-	{
-		setMotorSpeed(FlipMotor, 100);
-		sleep(2000);
-		setMotorSpeed(FlipMotor, -100);
-		sleep(2000);
-	}
-}
-
 task drive_task()
 {
 	while(1)
 	{
 		if (!stopped)
 		{
-			moveMotorTarget(LeftMotor, 720, 100);
+			//hogCPU();
+			moveMotorTarget(LeftMotor, 720*turn_flag, 100);
 			moveMotorTarget(RightMotor, 720, 100);
-			waitUntilMotorStop(LeftMotor);
-			waitUntilMotorStop(RightMotor);
+			//hogCPU();
+			//waitUntilMotorStop(LeftMotor);
+			//waitUntilMotorStop(RightMotor);
+			sleep(500);
+			//releaseCPU();
 		}
 	}
 
+}
+
+float notes[269][2] = {{739.99,48},{554.37,48},{659.26,48},{739.99,48},{739.99,48},{369.99,48},{739.99,48},{369.99,48},{659.26,48},{554.37,48},{659.26,48},{739.99,48},{659.26,48},{554.37,43},{659.26,5},{739.99,48},{440.0,48},{659.26,48},{554.37,48},{659.26,48},{739.99,48},{493.88,48},{880.0,43},{659.26,5},{739.99,48},{493.88,48},{880.0,43},{659.26,5},{739.99,48},{493.88,48},{880.0,43},{659.26,5},{739.99,48},{493.88,48},{739.99,48},{440.0,48},{659.26,48},{554.37,48},{659.26,48},{739.99,48},{739.99,48},{369.99,48},{739.99,48},{369.99,48},{659.26,48},{554.37,48},{659.26,48},{739.99,48},{659.26,48},{554.37,43},{659.26,5},{739.99,48},{440.0,48},{659.26,48},{554.37,48},{659.26,48},{739.99,48},{493.88,48},{880.0,43},{659.26,5},{739.99,48},{493.88,48},{880.0,43},{659.26,5},{739.99,48},{493.88,48},{880.0,43},{659.26,5},{739.99,48},{493.88,47},{-1,1},{880.0,23},{-1,1},{739.99,23},{-1,1},{493.88,47},{-1,1},{739.99,47},{-1,1},{554.37,36},{880.0,12},{739.99,47},{-1,1},{554.37,36},{880.0,12},{739.99,47},{-1,1},{554.37,36},{880.0,12},{739.99,47},{-1,1},{554.37,36},{880.0,12},{739.99,47},{-1,1},{554.37,36},{880.0,12},{739.99,47},{-1,1},{659.26,47},{-1,1},{659.26,47},{-1,1},{659.26,47},{-1,1},{659.26,47},{-1,1},{554.37,47},{-1,1},{554.37,47},{-1,1},{554.37,47},{-1,1},{493.88,47},{-1,1},{369.99,47},{-1,1},{493.88,47},{-1,1},{493.88,47},{-1,1},{493.88,47},{-1,1},{493.88,47},{-1,1},{493.88,47},{-1,1},{493.88,47},{-1,1},{493.88,47},{-1,1},{493.88,47},{-1,1},{493.88,47},{-1,1},{440.0,47},{-1,1},{493.88,47},{-1,1},{440.0,47},{-1,1},{369.99,47},{-1,1},{440.0,47},{-1,1},{369.99,47},{-1,1},{185.0,47},{-1,1},{185.0,47},{-1,1},{185.0,47},{-1,1},{185.0,47},{-1,1},{185.0,47},{-1,1},{369.99,24},{329.63,24},{277.18,24},{440.0,24},{369.99,48},{220.0,47},{-1,1},{220.0,47},{-1,1},{220.0,47},{-1,1},{220.0,47},{-1,1},{220.0,47},{-1,1},{369.99,24},{329.63,24},{277.18,24},{440.0,24},{369.99,48},{246.94,48},{369.99,24},{329.63,24},{277.18,24},{440.0,24},{369.99,48},{246.94,48},{369.99,24},{329.63,24},{277.18,24},{440.0,24},{369.99,48},{246.94,48},{369.99,24},{329.63,24},{277.18,24},{440.0,24},{369.99,48},{246.94,48},{277.18,48},{1108.73,48},{987.77,24},{880.0,24},{739.99,23},{-1,4},{369.99,19},{-1,2},{1108.73,48},{987.77,24},{880.0,24},{739.99,23},{-1,1},{369.99,23},{-1,1},{1108.73,48},{987.77,24},{880.0,24},{739.99,21},{-1,7},{369.99,20},{1108.73,48},{987.77,24},{880.0,24},{739.99,22},{-1,2},{369.99,22},{-1,2},{1108.73,48},{987.77,24},{880.0,24},{739.99,43},{-1,5},{739.99,24},{659.26,24},{554.37,24},{659.26,24},{739.99,48},{369.99,48},{739.99,24},{659.26,24},{554.37,24},{659.26,24},{739.99,48},{369.99,48},{739.99,24},{659.26,24},{554.37,24},{659.26,24},{739.99,48},{369.99,48},{739.99,24},{659.26,24},{554.37,24},{659.26,24},{739.99,48},{369.99,48},{739.99,24},{659.26,24},{554.37,24},{659.26,24},{739.99,24},{659.26,24},{554.37,24},{659.26,24},{739.99,24},{659.26,24},{554.37,24},{659.26,24},{739.99,24},{659.26,24},{554.37,24},{659.26,25}};
+
+task playMusic()
+{
+    float timing_multiplier = 0.3;
+
+    for (int i = 0; i < 269; i++)
+    {
+        if (notes[i][0] == -1)
+        {
+            sleep((int)(notes[i][1] * timing_multiplier));
+        } else
+        {
+            playTone(notes[i][0], (int)(notes[i][1] * timing_multiplier));
+            while(bSoundActive)
+            {
+                sleep(1);
+            }
+        }
+    }
 }
 
 task edge_detection()
@@ -216,9 +251,10 @@ task edge_detection()
 	while(1)
 	{
 		displayCenteredTextLine(6, "Colour value: %d", SensorValue[Colour]);
-		displayCenteredTextLine(7, "Colour thresh: %d", white_colour/3);
+		displayCenteredTextLine(7, "Colour thresh: %d", white_colour/2);
 
-		if (SensorValue[Colour] < white_colour/3)
+		//if (SensorValue[Colour] < white_colour/2)
+		if (SensorValue[Colour] < white_colour/2)
 		{
 			aquire_state_lock();
 			current_state = EDGE_EVASION;
@@ -237,6 +273,7 @@ task main()
 	for (int i = 0; i < 20; i++)
 	{
 		colour_average += SensorValue[Colour];
+		//colour_average = getColorReflected(Colour);
 		sleep(25);
 	}
 	white_colour = colour_average/20;
@@ -248,6 +285,7 @@ task main()
 
 	startTask(drive_task);
 	startTask(edge_detection);
+	//startTask(playMusic);
 
 	while(1)
 	{
